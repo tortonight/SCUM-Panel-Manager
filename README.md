@@ -13,6 +13,7 @@
 - **Auto-Update:** Checks and installs server updates via SteamCMD.
 - **Performance Monitoring:** Real-time display of CPU, RAM usage, and active players.
 - **Launch Parameters:** Customizable startup arguments (e.g., Use BattlEye, Port settings).
+- **Smart Path Configuration:** Automatic detection of essential server folders with status indicators for required/optional paths.
 
 ### 🤖 Automation
 - **Scheduled Restarts:** Set automatic restart intervals to keep the server fresh.
@@ -83,7 +84,11 @@ A built-in Discord Bot that bridges your server with your community:
 ## 📖 How to Use
 
 1. **First Launch:** Go to the **Settings** page.
-2. **Paths:** Set the `Game Path` (where SCUM Server is installed) and `SteamCMD Path`.
+2. **Configure Folders:**
+   - Use **Automatic Detection** to find your server paths instantly.
+   - Or manually select the required folders: **Server**, **Installation**, **Config**, **Log**, and **SteamCMD**.
+   - Optional: Set a custom **Backup** folder.
+   - Verify that all status indicators show **Found** or **Optional**.
 3. **Discord Bot (Optional):**
    - Create a Bot Application on [Discord Developer Portal](https://discord.com/developers/applications).
    - Copy the Bot Token and Webhook URLs.
@@ -105,6 +110,7 @@ This project is open-source. Feel free to modify and distribute.
 ## ✨ ฟีเจอร์เด่น
 
 - **ระบบจัดการเซิร์ฟเวอร์:** เปิด/ปิด/รีสตาร์ท เซิร์ฟเวอร์ได้ในคลิกเดียว พร้อมระบบอัปเดตตัวเกมอัตโนมัติ
+- **ตั้งค่าโฟลเดอร์อัจฉริยะ:** ระบบ **Automatic Detection** ช่วยค้นหาโฟลเดอร์เกมและตั้งค่า Path ต่างๆ ให้อัตโนมัติ (Server, Config, Log, etc.) พร้อมระบบแจ้งเตือนสถานะ
 - **ระบบ Discord Bot สุดล้ำ:**
   - **Kill Feed แบบ Embed:** แสดงผลสวยงาม แยกชื่อคนฆ่า/คนตาย พร้อมลิงก์ Steam Profile
   - **ระบุพิกัด:** บอกจุดเกิดเหตุ (X, Y, Z) และสร้างคำสั่ง `#TeleportTo` ให้แอดมินก๊อปไปใช้วาร์ปได้ทันที

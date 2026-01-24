@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('electron', {
 
   getAppSettings: () => ipcRenderer.invoke('get-app-settings'),
   saveAppSettings: (settings: Record<string, unknown>) => ipcRenderer.invoke('save-app-settings', settings),
+  detectServerPaths: () => ipcRenderer.invoke('detect-server-paths'),
   checkInstallationStatus: () => ipcRenderer.invoke('check-installation-status'),
   installSteamCmd: () => ipcRenderer.invoke('install-steamcmd'),
   installServer: () => ipcRenderer.invoke('install-server'),

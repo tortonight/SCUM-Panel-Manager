@@ -164,6 +164,69 @@ function getRconConfig() {
     };
 }
 
+// Helper to parse SCUM RCON player list
+interface RconPlayer {
+  id: string;
+  steamId: string;
+  name: string;
+  ip: string;
+  ping: number;
+  playtime: string;
+}
+
+function parseScumPlayers(response: string): RconPlayer[] {
+    const players: RconPlayer[] = [];
+    if (!response) return players;
+
+    const lines = response.split(/\r?\n/);
+    
+    for (const line of lines) {
+         const trimmed = line.trim();
+         // Skip headers, separators, or empty lines
+         if (!trimmed || trimmed.startsWith('---') || trimmed.includes('List of players:')) continue;
+
+         // Extract SteamID (17 digits) - Look anywhere in the line
+         const steamIdMatch = trimmed.match(/(\d{17})/);
+         if (steamIdMatch) {
+             const steamId = steamIdMatch[1];
+             let name = 'Unknown';
+             let ip = 'Unknown';
+             let ping = 0;
+             
+             // Try to match name in quotes
+             const nameMatch = trimmed.match(/"([^"]+)"/);
+             if (nameMatch) {
+                 name = nameMatch[1];
+             } else {
+                 // Fallback for names without quotes: Try to find "Name: <Name>" pattern or similar
+                 // SCUM output example: 1. SteamID: <ID> Name: <Name> Ping: <Ping> ...
+                 const nameTagMatch = trimmed.match(/Name:\s*([^:]+?)\s+(?:Ping|IP|SteamID)/);
+                 if (nameTagMatch) {
+                     name = nameTagMatch[1].trim();
+                 }
+             }
+             
+             const ipMatch = trimmed.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)/);
+             if (ipMatch) ip = ipMatch[1];
+             
+             const pingMatch = trimmed.match(/Ping:\s*(\d+)/i);
+             if (pingMatch) {
+                 ping = parseInt(pingMatch[1], 10);
+             }
+
+             players.push({
+                 id: steamId,
+                 steamId: steamId,
+                 name: name,
+                 ip: ip,
+                 ping: ping, 
+                 playtime: 'Unknown'
+             });
+         }
+    }
+    return players;
+}
+
 // Helper to fetch online players via RCON
 async function fetchOnlinePlayersCount(): Promise<number> {
     const rconConfig = getRconConfig();
@@ -181,22 +244,10 @@ async function fetchOnlinePlayersCount(): Promise<number> {
         await client.end();
 
         if (!response) return 0;
-
-        // Parse response to count players
-        // Format example:
-        // "List of players:\n1. SteamID: ... Name: ... \n2. ..."
-        // Or sometimes just lines. We count lines that look like player entries.
-        const lines = response.split('\n').filter(line => line.trim().length > 0);
-        
-        // Basic heuristic: check if line contains SteamID or similar indicator
-        // Usually SCUM RCON #ListPlayers returns a header and then players.
-        // We can count lines minus header.
-        // If "No players connected" or similar?
         if (response.includes("No players connected")) return 0;
-        
-        // Count lines that start with number or contain SteamID
-        const playerLines = lines.filter(l => l.includes('SteamID') || /^\d+\./.test(l.trim()));
-        return playerLines.length;
+
+        const players = parseScumPlayers(response);
+        return players.length;
     } catch {
         // console.error('RCON fetch error:', error); // Silence to avoid log spam
         return 0;
@@ -352,14 +403,34 @@ setInterval(async () => {
           }).catch(() => {}); // Ignore errors
       }
       
-      // Update max players from config if available
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const config = store.get('config') as Record<string, Record<string, any>>;
-      if (config && config['General'] && config['General']['scum.MaxPlayers']) {
-          serverStats.maxPlayers = parseInt(config['General']['scum.MaxPlayers']) || 64;
+      // Update max players from config or launch params
+      // Priority: Launch Params > Config > Default 64
+      const launchParams = store.get('launchParams') as { maxPlayers?: string };
+      if (launchParams && launchParams.maxPlayers) {
+          serverStats.maxPlayers = parseInt(launchParams.maxPlayers) || 64;
+      } else {
+          // Fallback to ServerSettings.ini
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const config = store.get('config') as Record<string, Record<string, any>>;
+          if (config && config['General'] && config['General']['scum.MaxPlayers']) {
+              serverStats.maxPlayers = parseInt(config['General']['scum.MaxPlayers']) || 64;
+          }
       }
   } else {
     serverStats.players = 0;
+    
+    // Also update max players when stopped so dashboard shows correct potential max
+    const launchParams = store.get('launchParams') as { maxPlayers?: string };
+      if (launchParams && launchParams.maxPlayers) {
+          serverStats.maxPlayers = parseInt(launchParams.maxPlayers) || 64;
+      } else {
+          // Fallback to ServerSettings.ini
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const config = store.get('config') as Record<string, Record<string, any>>;
+          if (config && config['General'] && config['General']['scum.MaxPlayers']) {
+              serverStats.maxPlayers = parseInt(config['General']['scum.MaxPlayers']) || 64;
+          }
+      }
   }
 
   // 2. Automation Scheduler
@@ -541,7 +612,15 @@ async function startServer(): Promise<{ success: boolean; message: string }> {
       serverProcess.on('error', (err: unknown) => {
           const error = err as Error & { code?: string };
           console.error('[Server] Failed to start process:', error);
-          appendToLog(`[Error] Failed to launch server: ${error.message} (Code: ${error.code})`);
+
+          let friendlyMessage = error.message;
+          if (error.code === 'EACCES') {
+              friendlyMessage = 'Permission Denied. Please run the app as Administrator or check Antivirus exclusions.';
+          } else if (error.code === 'ENOENT') {
+              friendlyMessage = 'Executable not found.';
+          }
+
+          appendToLog(`[Error] Failed to launch server: ${friendlyMessage} (Code: ${error.code})`);
           serverStatus = 'stopped';
           serverProcess = null;
           mainWindow?.webContents.send('server-status-update', serverStatus);
@@ -875,56 +954,7 @@ ipcMain.handle('get-online-players', async () => {
         const response = await rcon.send('#ListPlayers');
         await rcon.end();
 
-interface RconPlayer {
-  id: string;
-  steamId: string;
-  name: string;
-  ip: string;
-  ping: number;
-  playtime: string;
-}
-
-// ... inside get-online-players handler
-        // SCUM #ListPlayers format parsing
-        const players: RconPlayer[] = [];
-        const lines = response.split(/\r?\n/);
-        
-        for (const line of lines) {
-             const trimmed = line.trim();
-             if (!trimmed || trimmed.startsWith('SteamID') || trimmed.startsWith('---')) continue;
-
-             // Extract SteamID (17 digits)
-             const steamIdMatch = trimmed.match(/^(\d{17})/);
-             if (steamIdMatch) {
-                 const steamId = steamIdMatch[1];
-                 let name = 'Unknown';
-                 let ip = 'Unknown';
-                 
-                 // Try to match name in quotes
-                 const nameMatch = trimmed.match(/"([^"]+)"/);
-                 if (nameMatch) {
-                     name = nameMatch[1];
-                 } else {
-                     const parts = trimmed.split(/\s+/);
-                     if (parts.length >= 4) {
-                         name = parts.slice(1, parts.length - 2).join(' ');
-                     }
-                 }
-                 
-                 const ipMatch = trimmed.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)/);
-                 if (ipMatch) ip = ipMatch[1];
-                 
-                 players.push({
-                     id: steamId,
-                     steamId: steamId,
-                     name: name,
-                     ip: ip,
-                     ping: 0, 
-                     playtime: 'Unknown'
-                 });
-             }
-        }
-        return players;
+        return parseScumPlayers(response);
 
     } catch (error) {
         console.error('RCON Error:', error);
@@ -951,7 +981,7 @@ ipcMain.handle('ban-online-player', async (_event, steamId: string) => {
 
     // 2. RCON Ban & Kick
     const rcon = new Rcon({
-        host: config.ip,
+        host: config.host,
         port: config.port,
         password: config.password
     });
@@ -975,6 +1005,10 @@ ipcMain.handle('get-app-settings', async () => {
   return {
     steamCmdPath: store.get('steamCmdPath', ''),
     gamePath: store.get('gamePath', ''),
+    serverFolder: store.get('serverFolder', ''),
+    configFolder: store.get('configFolder', ''),
+    logFolder: store.get('logFolder', ''),
+    backupFolder: store.get('backupFolder', ''),
     launchParams: store.get('launchParams', {
       useLog: true,
       port: '7573',
@@ -987,9 +1021,46 @@ ipcMain.handle('get-app-settings', async () => {
 ipcMain.handle('save-app-settings', async (_event, settings) => {
   if (settings.steamCmdPath !== undefined) store.set('steamCmdPath', settings.steamCmdPath);
   if (settings.gamePath !== undefined) store.set('gamePath', settings.gamePath);
+  if (settings.serverFolder !== undefined) store.set('serverFolder', settings.serverFolder);
+  if (settings.configFolder !== undefined) store.set('configFolder', settings.configFolder);
+  if (settings.logFolder !== undefined) store.set('logFolder', settings.logFolder);
+  if (settings.backupFolder !== undefined) store.set('backupFolder', settings.backupFolder);
   if (settings.launchParams !== undefined) store.set('launchParams', settings.launchParams);
   console.log('[System] Settings saved:', settings);
   return { success: true };
+});
+
+ipcMain.handle('detect-server-paths', async () => {
+    let gamePath = store.get('gamePath') as string;
+    
+    // Common install locations
+    const commonPaths = [
+        'C:\\Servers\\scum',
+        'C:\\SCUMServer',
+        path.join(os.homedir(), 'Desktop', 'SCUMServer')
+    ];
+
+    if (!gamePath || !fs.existsSync(gamePath)) {
+        for (const p of commonPaths) {
+            if (fs.existsSync(p)) {
+                gamePath = p;
+                break;
+            }
+        }
+    }
+
+    if (gamePath && fs.existsSync(gamePath)) {
+        const derived = {
+             gamePath: gamePath,
+             serverFolder: path.join(gamePath, 'SCUM', 'Binaries', 'Win64'),
+             configFolder: path.join(gamePath, 'SCUM', 'Saved', 'Config', 'WindowsServer'),
+             logFolder: path.join(gamePath, 'SCUM', 'Saved', 'Logs'),
+             backupFolder: path.join(gamePath, 'backups')
+        };
+        return { success: true, paths: derived };
+    }
+
+    return { success: false, message: 'Could not detect SCUM server installation.' };
 });
 
   ipcMain.handle('check-installation-status', async () => {

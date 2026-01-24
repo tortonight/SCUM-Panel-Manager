@@ -78,6 +78,13 @@ export const setupMockElectron = () => {
 
     getAppSettings: async () => ({ steamCmdPath: 'C:\\SteamCMD', gamePath: 'C:\\SCUM' }),
     saveAppSettings: async () => ({ success: true }),
+    detectServerPaths: async () => ({ success: true, paths: { 
+        gamePath: 'C:\\SCUM', 
+        serverFolder: 'C:\\SCUM\\Binaries\\Win64', 
+        configFolder: 'C:\\SCUM\\Saved\\Config\\WindowsServer',
+        logFolder: 'C:\\SCUM\\Saved\\Logs',
+        backupFolder: 'C:\\SCUM\\backups'
+    } }),
     selectDirectory: async () => ({ canceled: false, path: 'C:\\Mock\\Path' }),
     checkInstallationStatus: async () => ({ steamCmdInstalled: true, serverInstalled: true }),
     installSteamCmd: async () => ({ success: true, message: 'Installed' }),

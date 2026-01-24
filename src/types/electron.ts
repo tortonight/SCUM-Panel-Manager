@@ -29,6 +29,7 @@ export interface ElectronAPI {
 
   getAppSettings: () => Promise<AppSettings>;
   saveAppSettings: (settings: Partial<AppSettings>) => Promise<{ success: boolean }>;
+  detectServerPaths: () => Promise<{ success: boolean; paths?: Partial<AppSettings>; message?: string }>;
   selectDirectory: () => Promise<{ canceled: boolean; path: string | null }>;
   checkInstallationStatus: () => Promise<{ steamCmdInstalled: boolean; serverInstalled: boolean }>;
   installSteamCmd: () => Promise<{ success: boolean; message: string }>;
@@ -92,6 +93,10 @@ export interface AutomationStats {
 export interface AppSettings {
   steamCmdPath: string;
   gamePath: string;
+  serverFolder?: string;
+  configFolder?: string;
+  logFolder?: string;
+  backupFolder?: string;
   launchParams?: {
     useLog: boolean;
     useBattlEye?: boolean;
