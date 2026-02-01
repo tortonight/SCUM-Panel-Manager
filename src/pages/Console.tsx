@@ -7,16 +7,18 @@ export const Console: React.FC = () => {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     // Load history
     window.electron.getConsoleLogs().then((history) => {
-      setLogs(history);
+      if (isMounted) setLogs(history);
     });
 
     window.electron.onConsoleLog((message) => {
-      setLogs(prev => [...prev, message]);
+      if (isMounted) setLogs(prev => [...prev, message]);
     });
 
     return () => {
+      isMounted = false;
       window.electron.removeAllListeners('console-log');
     };
   }, []);

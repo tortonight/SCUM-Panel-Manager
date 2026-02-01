@@ -1,1 +1,57 @@
-"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("electron",{minimize:()=>e.ipcRenderer.send("minimize-window"),maximize:()=>e.ipcRenderer.send("maximize-window"),close:()=>e.ipcRenderer.send("close-window"),startServer:()=>e.ipcRenderer.invoke("start-server"),stopServer:()=>e.ipcRenderer.invoke("stop-server"),restartServer:()=>e.ipcRenderer.invoke("restart-server"),sendCommand:r=>e.ipcRenderer.invoke("send-command",r),getConfig:()=>e.ipcRenderer.invoke("get-config"),saveConfig:r=>e.ipcRenderer.invoke("save-config",r),getWhitelist:()=>e.ipcRenderer.invoke("get-whitelist"),saveWhitelist:r=>e.ipcRenderer.invoke("save-whitelist",r),getBannedUsers:()=>e.ipcRenderer.invoke("get-banned-users"),saveBannedUsers:r=>e.ipcRenderer.invoke("save-banned-users",r),getAdminUsers:()=>e.ipcRenderer.invoke("get-admin-users"),saveAdminUsers:r=>e.ipcRenderer.invoke("save-admin-users",r),getServerSettingsAdminUsers:()=>e.ipcRenderer.invoke("get-server-settings-admin-users"),saveServerSettingsAdminUsers:r=>e.ipcRenderer.invoke("save-server-settings-admin-users",r),getOnlinePlayers:()=>e.ipcRenderer.invoke("get-online-players"),banOnlinePlayer:r=>e.ipcRenderer.invoke("ban-online-player",r),getDiscordConfig:()=>e.ipcRenderer.invoke("get-discord-config"),saveDiscordConfig:r=>e.ipcRenderer.invoke("save-discord-config",r),getAutomationConfig:()=>e.ipcRenderer.invoke("get-automation-config"),saveAutomationConfig:r=>e.ipcRenderer.invoke("save-automation-config",r),getDiscordBotStatus:()=>e.ipcRenderer.invoke("get-discord-bot-status"),restartDiscordBot:()=>e.ipcRenderer.invoke("restart-discord-bot"),stopDiscordBot:()=>e.ipcRenderer.invoke("stop-discord-bot"),getAppSettings:()=>e.ipcRenderer.invoke("get-app-settings"),saveAppSettings:r=>e.ipcRenderer.invoke("save-app-settings",r),detectServerPaths:()=>e.ipcRenderer.invoke("detect-server-paths"),checkInstallationStatus:()=>e.ipcRenderer.invoke("check-installation-status"),installSteamCmd:()=>e.ipcRenderer.invoke("install-steamcmd"),installServer:()=>e.ipcRenderer.invoke("install-server"),updateServer:()=>e.ipcRenderer.invoke("update-server"),verifyServerFiles:()=>e.ipcRenderer.invoke("verify-server-files"),selectDirectory:()=>e.ipcRenderer.invoke("select-directory"),triggerBackup:()=>e.ipcRenderer.invoke("trigger-backup"),checkForUpdates:()=>e.ipcRenderer.invoke("check-for-updates"),onStatsUpdate:r=>{e.ipcRenderer.on("server-stats-update",(i,n)=>r(n))},onStatusUpdate:r=>{e.ipcRenderer.on("server-status-update",(i,n)=>r(n))},onAutomationUpdate:r=>{e.ipcRenderer.on("automation-update",(i,n)=>r(n))},onConsoleLog:r=>{e.ipcRenderer.on("console-log",(i,n)=>r(n))},getConsoleLogs:()=>e.ipcRenderer.invoke("get-console-logs"),removeAllListeners:r=>{e.ipcRenderer.removeAllListeners(r)}});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("electron", {
+  minimize: () => electron.ipcRenderer.send("minimize-window"),
+  maximize: () => electron.ipcRenderer.send("maximize-window"),
+  close: () => electron.ipcRenderer.send("close-window"),
+  startServer: () => electron.ipcRenderer.invoke("start-server"),
+  stopServer: () => electron.ipcRenderer.invoke("stop-server"),
+  restartServer: () => electron.ipcRenderer.invoke("restart-server"),
+  sendCommand: (command) => electron.ipcRenderer.invoke("send-command", command),
+  getConfig: () => electron.ipcRenderer.invoke("get-config"),
+  saveConfig: (config) => electron.ipcRenderer.invoke("save-config", config),
+  getWhitelist: () => electron.ipcRenderer.invoke("get-whitelist"),
+  saveWhitelist: (list) => electron.ipcRenderer.invoke("save-whitelist", list),
+  getBannedUsers: () => electron.ipcRenderer.invoke("get-banned-users"),
+  saveBannedUsers: (list) => electron.ipcRenderer.invoke("save-banned-users", list),
+  getAdminUsers: () => electron.ipcRenderer.invoke("get-admin-users"),
+  saveAdminUsers: (list) => electron.ipcRenderer.invoke("save-admin-users", list),
+  getServerSettingsAdminUsers: () => electron.ipcRenderer.invoke("get-server-settings-admin-users"),
+  saveServerSettingsAdminUsers: (list) => electron.ipcRenderer.invoke("save-server-settings-admin-users", list),
+  getOnlinePlayers: () => electron.ipcRenderer.invoke("get-online-players"),
+  banOnlinePlayer: (steamId) => electron.ipcRenderer.invoke("ban-online-player", steamId),
+  getDiscordConfig: () => electron.ipcRenderer.invoke("get-discord-config"),
+  saveDiscordConfig: (config) => electron.ipcRenderer.invoke("save-discord-config", config),
+  getAutomationConfig: () => electron.ipcRenderer.invoke("get-automation-config"),
+  saveAutomationConfig: (config) => electron.ipcRenderer.invoke("save-automation-config", config),
+  getDiscordBotStatus: () => electron.ipcRenderer.invoke("get-discord-bot-status"),
+  restartDiscordBot: () => electron.ipcRenderer.invoke("restart-discord-bot"),
+  stopDiscordBot: () => electron.ipcRenderer.invoke("stop-discord-bot"),
+  getAppSettings: () => electron.ipcRenderer.invoke("get-app-settings"),
+  saveAppSettings: (settings) => electron.ipcRenderer.invoke("save-app-settings", settings),
+  detectServerPaths: () => electron.ipcRenderer.invoke("detect-server-paths"),
+  checkInstallationStatus: () => electron.ipcRenderer.invoke("check-installation-status"),
+  installSteamCmd: () => electron.ipcRenderer.invoke("install-steamcmd"),
+  installServer: () => electron.ipcRenderer.invoke("install-server"),
+  updateServer: () => electron.ipcRenderer.invoke("update-server"),
+  verifyServerFiles: () => electron.ipcRenderer.invoke("verify-server-files"),
+  selectDirectory: () => electron.ipcRenderer.invoke("select-directory"),
+  triggerBackup: () => electron.ipcRenderer.invoke("trigger-backup"),
+  checkForUpdates: () => electron.ipcRenderer.invoke("check-for-updates"),
+  onStatsUpdate: (callback) => {
+    electron.ipcRenderer.on("server-stats-update", (_event, stats) => callback(stats));
+  },
+  onStatusUpdate: (callback) => {
+    electron.ipcRenderer.on("server-status-update", (_event, status) => callback(status));
+  },
+  onAutomationUpdate: (callback) => {
+    electron.ipcRenderer.on("automation-update", (_event, automation) => callback(automation));
+  },
+  onConsoleLog: (callback) => {
+    electron.ipcRenderer.on("console-log", (_event, message) => callback(message));
+  },
+  getConsoleLogs: () => electron.ipcRenderer.invoke("get-console-logs"),
+  removeAllListeners: (channel) => {
+    electron.ipcRenderer.removeAllListeners(channel);
+  }
+});

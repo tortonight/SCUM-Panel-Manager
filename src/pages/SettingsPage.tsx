@@ -81,9 +81,12 @@ export const SettingsPage: React.FC = () => {
   }, []);
 
   const loadSettings = async () => {
-    const data = await window.electron.getAppSettings();
+    const [data, status] = await Promise.all([
+      window.electron.getAppSettings(),
+      window.electron.checkInstallationStatus()
+    ]);
     setSettings(data);
-    await checkStatus();
+    setInstallStatus(status);
   };
 
   const checkStatus = async () => {

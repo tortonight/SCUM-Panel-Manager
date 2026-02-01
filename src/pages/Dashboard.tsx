@@ -223,7 +223,7 @@ interface ControlButtonProps {
   color: string;
 }
 
-const ControlButton = ({ onClick, disabled, icon: Icon, label, color }: ControlButtonProps) => (
+const ControlButton = React.memo(({ onClick, disabled, icon: Icon, label, color }: ControlButtonProps) => (
   <button
     onClick={onClick}
     disabled={disabled}
@@ -235,7 +235,7 @@ const ControlButton = ({ onClick, disabled, icon: Icon, label, color }: ControlB
     <Icon size={20} />
     {label}
   </button>
-);
+));
 
 interface ChartCardProps {
   title: string;

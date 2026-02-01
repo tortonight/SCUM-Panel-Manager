@@ -8,17 +8,18 @@ interface SidebarProps {
   serverStatus: string;
 }
 
+const menuItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'console', label: 'Live Console', icon: Terminal },
+  { id: 'players', label: 'Player Manager', icon: Users },
+  { id: 'config', label: 'Game Config', icon: Settings },
+  { id: 'schedule', label: 'Automation', icon: Clock },
+  { id: 'backup', label: 'Backups', icon: Archive },
+  { id: 'settings', label: 'App Settings', icon: Wrench },
+  { id: 'discord', label: 'Discord Bot', icon: Bot },
+];
+
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, serverStatus }) => {
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'console', label: 'Live Console', icon: Terminal },
-    { id: 'players', label: 'Player Manager', icon: Users },
-    { id: 'config', label: 'Game Config', icon: Settings },
-    { id: 'schedule', label: 'Automation', icon: Clock },
-    { id: 'backup', label: 'Backups', icon: Archive },
-    { id: 'settings', label: 'App Settings', icon: Wrench },
-    { id: 'discord', label: 'Discord Bot', icon: Bot },
-  ];
 
   return (
     <div className="w-64 bg-military-800 border-r border-military-700 flex flex-col h-full">
